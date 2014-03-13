@@ -18,16 +18,29 @@ public class MusicBox : MonoBehaviour {
 	void OnTriggerExit (Collider col) {
 		if (col.gameObject.tag == "Player") {
 			playerInBox = false;
+
+			col.gameObject.GetComponent<CharacterMove> ().leftMusicBox(this);
 		}	
 	}
 
 	void OnTriggerEnter (Collider col) {
 		if (col.gameObject.tag == "Player") {
-			AudioSource camAudio = Camera.main.audio;
-			camAudio.clip = this.audio.clip;
-			camAudio.Play ();
+			//Play on Camera
+//				AudioSource camAudio = Camera.main.audio;
+//				camAudio.clip = this.audio.clip;
+//				camAudio.Play ();
+			col.gameObject.GetComponent<CharacterMove> ().hitMusicBox(this);
+
 			playerInBox = true;
 		}	
 	}
 
+	public void toggleMusic () {
+		if (audio.isPlaying) {
+			audio.Stop ();
+		} else {
+			audio.Play ();
+		}
+	}
+	
 }

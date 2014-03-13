@@ -210,7 +210,7 @@ public class Audio_Utils : MonoBehaviour {
 
 		//Get the Spectrum Data for the Audio Clip Currently Playing
 		// - To Increase Performance (But Decrease Accuracy) Change BlackmanHarris to Other FFTWindow Type (eg. Rectangular)
-		float[] spectrum = audio.GetSpectrumData(sampleSize, 0, FFTWindow.BlackmanHarris);
+		float[] spectrum = audio.GetSpectrumData(sampleSize, 0, FFTWindow.Rectangular);
 
 		//Goes Through Every Sample in the Spectrum and Draws the Necessary Lines
 		int i = 1;

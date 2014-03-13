@@ -1,16 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class CharacterMove : MonoBehaviour {
 
 	public float moveSpeed = 5f;
 	public float jumpForce = 400f;
-
+	
 	public bool grounded = false;
+
+	private List<MusicBox> touchingMusic;
 
 	// Use this for initialization
 	void Start () {
-	
+		touchingMusic = new List<MusicBox> ();
 	}
 	
 	// Update is called once per frame
@@ -18,6 +21,7 @@ public class CharacterMove : MonoBehaviour {
 		HorizontalMove ();
 		VerticalMove ();
 		Jump ();
+		ToggleMusic ();
 	}
 
 	void VerticalMove () {
@@ -43,11 +47,27 @@ public class CharacterMove : MonoBehaviour {
 		} 	
 	}
 
+	void ToggleMusic () {
+		if (Input.GetKeyDown(KeyCode.P)) {
+			foreach (MusicBox muse in touchingMusic) {
+				muse.toggleMusic();
+			}
+		}
+	}
+
 	void OnCollisionEnter (Collision col) {
 		if (col.gameObject.tag == "Ground" || col.gameObject.tag == "Musical") grounded = true;
 	}
 	
 	void OnCollisionExit (Collision col) {
 		if (col.gameObject.tag == "Ground" || col.gameObject.tag == "Musical") grounded = false;
+	}
+
+	public void hitMusicBox (MusicBox muse) {
+		touchingMusic.Add (muse);
+	}
+
+	public void leftMusicBox (MusicBox muse) {
+		touchingMusic.Remove (muse);
 	}
 }

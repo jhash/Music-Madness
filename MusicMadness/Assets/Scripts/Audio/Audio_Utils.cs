@@ -19,6 +19,7 @@ public class WaveRange {
 	public bool resetThreshold = true;
 	public float resetTimerLength = 5f;
 	public Color thresholdColor = Color.blue;
+	public bool printLines = true;
 	private float resetTimer = 0f;
 	private float hitTimer = 0f;
 	private int sampleSize;
@@ -92,7 +93,7 @@ public class WaveRange {
 		}
 
 		//If i is Within the Range Draw the Threshold Lines
-		if (i >= sampleMin && i < sampleMax) {
+		if (i >= sampleMin && printLines) {
 
 			Debug.DrawLine(new Vector3(i - 1, threshold + 10, 0), new Vector3(i, threshold + 10, 0), thresholdColor);
 			Debug.DrawLine(new Vector3(Mathf.Log(i - 1), threshold - 10, 1), new Vector3(Mathf.Log(i), threshold - 10, 1), thresholdColor); 
@@ -191,6 +192,7 @@ public class Audio_Utils : MonoBehaviour {
 	public List<WaveRange> ranges;
 	private int sampleSizePower = 10;
 	private int sampleSize = 1024;
+	public bool printLines = true;
 	
 	void Start () {
 
@@ -199,6 +201,10 @@ public class Audio_Utils : MonoBehaviour {
 			sampleSizePower = 10;
 
 		sampleSize = (int)Mathf.Pow (2f, sampleSizePower);
+
+		foreach (WaveRange wv in ranges) {
+			wv.printLines = printLines;
+		}
 	}
 	
 	void Update() {
@@ -214,21 +220,25 @@ public class Audio_Utils : MonoBehaviour {
 
 		//Goes Through Every Sample in the Spectrum and Draws the Necessary Lines
 		int i = 1;
-		while ( i < sampleSize-1 ) {
-			//Draw Regular Colors
-			Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.green);
-			Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.red);
-			Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.cyan);
-			Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.yellow);
+		while ( i < sampleSize-1) {
+			if (printLines) {
+				//Draw Regular Colors
+				Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.green);
+				Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.red);
+				Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.cyan);
+				Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.yellow);
+			}
 
 			//Draw the Waves
 			foreach (WaveRange wv in ranges) {
 				//If i is Within the Wave Range, Draw the Line Above in White Over Top
 				if (wv.UpdateRange(i, spectrum)) {
-					Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.white);
-					Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.white);
-					Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.white);
-					Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.white);
+					if (printLines) {
+						Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.white);
+						Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.white);
+						Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.white);
+						Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.white);
+					}
 				} 
 			}
 

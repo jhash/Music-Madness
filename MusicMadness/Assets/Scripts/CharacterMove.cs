@@ -1,19 +1,68 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
+
+public class MusicCollection : IComparer<MusicCollection> {
+	public AudioClip clipOfAudio = null;
+	public List<float> startTimes;
+	public List<float> endTimes;
+
+	public bool recording = false;
+
+	public int curClip = 0;
+	
+	public MusicCollection (AudioClip insClip, float time) {
+		startTimes = new List<float> ();
+		endTimes = new List<float> ();
+		clipAction (insClip, time);
+	}
+
+	public void clipAction (AudioClip insClip, float time) {
+		if (clipOfAudio == null)
+			clipOfAudio = insClip;
+			
+		if (recording) {
+			recording = false;
+			endTimes.Add(time);
+		} else {
+			recording = true;
+			startTimes.Add(time);
+		}
+	}
+
+		
+	public int Compare(MusicCollection x, MusicCollection y) {
+
+		if (x.clipOfAudio == y.clipOfAudio) {
+			return 0;
+		} else {
+			return 1;
+		}
+		
+	}
+
+}
 
 public class CharacterMove : MonoBehaviour {
 
 	public float moveSpeed = 5f;
 	public float jumpForce = 400f;
+	public Texture recordingIMG;
 	
-	public bool grounded = false;
+	private bool grounded = false;
+	private bool recording = false;
+
+	private float startRec = 0f;
 
 	private List<MusicBox> touchingMusic;
+
+	public List<MusicCollection> recordedClips;
 
 	// Use this for initialization
 	void Start () {
 		touchingMusic = new List<MusicBox> ();
+		recordedClips = new List<MusicCollection> ();
 	}
 	
 	// Update is called once per frame
@@ -21,7 +70,7 @@ public class CharacterMove : MonoBehaviour {
 		HorizontalMove ();
 		VerticalMove ();
 		Jump ();
-		ToggleMusic ();
+		Record ();
 	}
 
 	void VerticalMove () {
@@ -45,13 +94,63 @@ public class CharacterMove : MonoBehaviour {
 		if (Input.GetButtonDown("Jump") && grounded) {
 			rigidbody.AddForce (new Vector3 (0f, jumpForce, 0f));
 		} 	
+
+		if (Input.GetButtonUp("Jump")) {
+			rigidbody.velocity = new Vector3 (rigidbody.velocity.x, 0f, rigidbody.velocity.x);
+		} 	
 	}
 
-	void ToggleMusic () {
-		if (Input.GetKeyDown(KeyCode.P)) {
-			foreach (MusicBox muse in touchingMusic) {
-				muse.toggleMusic();
+	void Record () {
+		if (Input.GetKeyDown(KeyCode.R)) {
+			recording = !recording;
+		}
+	}
+
+	public void OnGUI() {
+		// Process keyboard events as needed.
+		int num;
+		if (Event.current.type == EventType.KeyDown) {
+			// Convert to numeric value for convenience :)
+			num = Event.current.keyCode - KeyCode.Alpha1;
+
+			if (num >= -1 && num < 9) {
+//				Debug.Log(num.ToString() + " " + Event.current.keyCode);
+				if (num == -1) num = 9;
+
+				foreach (MusicBox muse in touchingMusic) {
+
+					AudioClip insClip = muse.toggleMusic(num);
+					if (recording && insClip != null) {
+						if (startRec == 0f) {
+							startRec = Time.time;
+						}
+
+						MusicCollection tmp = new MusicCollection (insClip, Time.time - startRec);
+						bool found = false;
+						foreach (MusicCollection col in recordedClips) {
+							if (col.Compare(col, tmp) == 0) {
+//								recordedClips.Add(new MusicCollection (insClip, Time.time - startRec));	
+								col.clipAction (insClip, Time.time - startRec);
+								found = true;
+								break;
+							} 
+						}
+
+						if (!found) {
+							recordedClips.Add(tmp);
+						}
+					}
+
+					if (Input.GetKey (KeyCode.L)) {
+						muse.toggleLoop(num);
+					}
+
+				}
 			}
+		}
+
+		if (recording) {
+			GUI.DrawTexture (new Rect (Screen.width * 0.88f , Screen.height / 40f, Screen.width / 10f, Screen.height / 20f), recordingIMG);
 		}
 	}
 

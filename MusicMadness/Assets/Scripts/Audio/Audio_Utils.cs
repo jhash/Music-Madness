@@ -193,6 +193,9 @@ public class Audio_Utils : MonoBehaviour {
 	private int sampleSizePower = 10;
 	private int sampleSize = 1024;
 	public bool printLines = true;
+	public AudioSource[] audSources; 
+	public int numSources = 0; 
+	public bool sourcesChecked = false; 
 	
 	void Start () {
 
@@ -205,8 +208,23 @@ public class Audio_Utils : MonoBehaviour {
 		foreach (WaveRange wv in ranges) {
 			wv.printLines = printLines;
 		}
+
+		audSources = transform.parent.GetComponentsInChildren<AudioSource> ();
+		numSources = audSources.Length;
 	}
-	
+
+	void checkSources () {
+		if (numSources == 0) {
+			audSources = transform.parent.GetComponentsInChildren<AudioSource> ();
+			numSources = audSources.Length;
+		}
+		sourcesChecked = true;
+
+		if (numSources == 0) {
+			Debug.Log ("Missing Audio Source");
+		}
+	}
+
 	void Update() {
 
 		//Updates Each WaveRange's Timer Because They Do Not Inherit MonoBehaviour
@@ -214,36 +232,43 @@ public class Audio_Utils : MonoBehaviour {
 			wv.UpdateTimer();
 		}
 
-		//Get the Spectrum Data for the Audio Clip Currently Playing
-		// - To Increase Performance (But Decrease Accuracy) Change BlackmanHarris to Other FFTWindow Type (eg. Rectangular)
-		float[] spectrum = audio.GetSpectrumData(sampleSize, 0, FFTWindow.Rectangular);
+		if (!sourcesChecked) {
+			checkSources();
+		}
 
-		//Goes Through Every Sample in the Spectrum and Draws the Necessary Lines
-		int i = 1;
-		while ( i < sampleSize-1) {
-			if (printLines) {
-				//Draw Regular Colors
-				Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.green);
-				Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.red);
-				Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.cyan);
-				Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.yellow);
+		foreach (AudioSource aud in audSources) {
+			//Get the Spectrum Data for the Audio Clip Currently Playing
+			// - To Increase Performance (But Decrease Accuracy) Change BlackmanHarris to Other FFTWindow Type (eg. Rectangular)
+			float[] spectrum = aud.GetSpectrumData(sampleSize, 0, FFTWindow.Rectangular);
+
+			//Goes Through Every Sample in the Spectrum and Draws the Necessary Lines
+			int i = 1;
+			while ( i < sampleSize-1) {
+				if (printLines) {
+					//Draw Regular Colors
+					Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.green);
+					Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.red);
+					Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.cyan);
+					Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.yellow);
+				}
+
+				//Draw the Waves
+				foreach (WaveRange wv in ranges) {
+					//If i is Within the Wave Range, Draw the Line Above in White Over Top
+					if (wv.UpdateRange(i, spectrum)) {
+						if (printLines) {
+							Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.white);
+							Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.white);
+							Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.white);
+							Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.white);
+						}
+					} 
+				}
+
+
+				i++;
 			}
 
-			//Draw the Waves
-			foreach (WaveRange wv in ranges) {
-				//If i is Within the Wave Range, Draw the Line Above in White Over Top
-				if (wv.UpdateRange(i, spectrum)) {
-					if (printLines) {
-						Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.white);
-						Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.white);
-						Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.white);
-						Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.white);
-					}
-				} 
-			}
-
-
-			i++;
 		}
 
 	}

@@ -50,6 +50,7 @@
      <Compile Include="Assets\Scripts\Audio\Audio_Utils.cs" />
      <Compile Include="Assets\Scripts\Audio\ClipRangePresets.cs" />
      <Compile Include="Assets\Scripts\Audio\EffectScript.cs" />
+     <Compile Include="Assets\Scripts\Audio\SavWav.cs" />
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
      <Compile Include="Assets\Scripts\CharacterMove.cs" />
      <Compile Include="Assets\Scripts\MusicBox.cs" />

@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 
+[System.Serializable]
 public class MusicCollection : IComparer<MusicCollection> {
-	public AudioClip clipOfAudio = null;
+	private AudioClip clipOfAudio = null;
 	public List<float> startTimes;
 	public List<float> endTimes;
 
@@ -24,13 +25,15 @@ public class MusicCollection : IComparer<MusicCollection> {
 			
 		if (recording) {
 			recording = false;
-			endTimes.Add(time);
+			if (time < endTimes[endTimes.Count-1]) {
+				endTimes[endTimes.Count-1] = time;
+			}
 		} else {
 			recording = true;
 			startTimes.Add(time);
+			endTimes.Add(time + insClip.length);
 		}
 	}
-
 		
 	public int Compare(MusicCollection x, MusicCollection y) {
 
@@ -45,6 +48,8 @@ public class MusicCollection : IComparer<MusicCollection> {
 }
 
 public class CharacterMove : MonoBehaviour {
+	
+	public List<MusicCollection> recordedClips;
 
 	public float moveSpeed = 5f;
 	public float jumpForce = 400f;
@@ -57,7 +62,6 @@ public class CharacterMove : MonoBehaviour {
 
 	private List<MusicBox> touchingMusic;
 
-	public List<MusicCollection> recordedClips;
 
 	// Use this for initialization
 	void Start () {
@@ -91,18 +95,32 @@ public class CharacterMove : MonoBehaviour {
 
 	void Jump () {
 
-		if (Input.GetButtonDown("Jump") && grounded) {
+		if (Input.GetButtonDown("Jump") && (grounded || touchingMusic.Count > 0)) {
 			rigidbody.AddForce (new Vector3 (0f, jumpForce, 0f));
 		} 	
 
-		if (Input.GetButtonUp("Jump")) {
+		if (Input.GetButtonUp("Jump") && rigidbody.velocity.y > 0f) {
 			rigidbody.velocity = new Vector3 (rigidbody.velocity.x, 0f, rigidbody.velocity.x);
 		} 	
 	}
 
 	void Record () {
 		if (Input.GetKeyDown(KeyCode.R)) {
+			if (recording) {
+				startRec = 0f;
+
+				finalizeRecording ();
+			}
 			recording = !recording;
+		}
+	}
+
+	private void finalizeRecording () {
+
+		foreach (MusicCollection col in recordedClips) {
+			foreach (float time in col.startTimes) {
+
+			}
 		}
 	}
 
@@ -114,7 +132,6 @@ public class CharacterMove : MonoBehaviour {
 			num = Event.current.keyCode - KeyCode.Alpha1;
 
 			if (num >= -1 && num < 9) {
-//				Debug.Log(num.ToString() + " " + Event.current.keyCode);
 				if (num == -1) num = 9;
 
 				foreach (MusicBox muse in touchingMusic) {
@@ -129,7 +146,6 @@ public class CharacterMove : MonoBehaviour {
 						bool found = false;
 						foreach (MusicCollection col in recordedClips) {
 							if (col.Compare(col, tmp) == 0) {
-//								recordedClips.Add(new MusicCollection (insClip, Time.time - startRec));	
 								col.clipAction (insClip, Time.time - startRec);
 								found = true;
 								break;
